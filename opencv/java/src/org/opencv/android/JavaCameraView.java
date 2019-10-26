@@ -221,9 +221,9 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                     /* Finally we are ready to start the preview */
                     Log.d(TAG, "startPreview");
 
-                    //화면 세우기
+/*                    //화면 세우기
                     setDisplayOrientation(mCamera, 90);
-                    mCamera.setPreviewDisplay(getHolder());
+                    mCamera.setPreviewDisplay(getHolder());*/
 
 
 
@@ -240,7 +240,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
     }
 
 
-    //화면세우기
+/*    //화면세우기
     protected void setDisplayOrientation(Camera camera, int angle){
         Method downPolymorphic;
         try {
@@ -254,7 +254,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
             e1.printStackTrace();
         }
 
-    }
+    }*/
 
 
     protected void releaseCamera() {
