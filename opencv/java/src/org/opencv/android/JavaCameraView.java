@@ -1,5 +1,6 @@
 package org.opencv.android;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 import android.content.Context;
@@ -219,6 +220,13 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
 
                     /* Finally we are ready to start the preview */
                     Log.d(TAG, "startPreview");
+
+                    //화면 세우기
+                    setDisplayOrientation(mCamera, 90);
+                    mCamera.setPreviewDisplay(getHolder());
+
+
+
                     mCamera.startPreview();
                 } else
                     result = false;
@@ -230,6 +238,24 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
 
         return result;
     }
+
+
+    //화면세우기
+    protected void setDisplayOrientation(Camera camera, int angle){
+        Method downPolymorphic;
+        try {
+            downPolymorphic = camera.getClass().getMethod("setDisplayOrientation ", new Class[] {int.class});
+            if(downPolymorphic != null)
+                downPolymorphic.invoke(camera, new Object[]{ angle});
+
+        }
+        catch (Exception e1)
+        {
+            e1.printStackTrace();
+        }
+
+    }
+
 
     protected void releaseCamera() {
         synchronized (this) {
