@@ -33,17 +33,278 @@ float resize(Mat img_src, Mat &img_resize, int resize_width){
 
 }
 
-//extern "C"
-//JNIEXPORT void JNICALL
-//Java_june_third_autoemotionsticker_MainActivity_ConvertRGBtoGray(JNIEnv *env, jobject thiz,
-//                                                                 jlong matAddrInput,
-//                                                                 jlong matAddrResult) {
-//    Mat &matInput = *(Mat *)matAddrInput;
-//    Mat &matResult = *(Mat *)matAddrResult;
-//
-//    cvtColor(matInput, matResult, COLOR_RGBA2GRAY);
-//
-//}
+extern "C"
+JNIEXPORT void JNICALL
+Java_june_third_autoemotionsticker_MainActivity_ConvertRGBtoGray(JNIEnv *env, jobject thiz,
+                                                                 jlong matAddrInput,
+                                                                 jlong matAddrResult) {
+    Mat &matInput = *(Mat *)matAddrInput;
+    Mat &matResult = *(Mat *)matAddrResult;
+
+    cvtColor(matInput, matResult, COLOR_RGBA2GRAY);
+
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_june_third_autoemotionsticker_MainActivity_ConvertMyFilter(JNIEnv *env, jobject thiz,
+                                                                jlong mat_addr_input,
+                                                                jlong mat_addr_result) {
+
+    Mat &matInput = *(Mat *)mat_addr_input;
+    Mat &matResult = *(Mat *)mat_addr_result;
+
+
+
+
+
+
+
+}
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_june_third_autoemotionsticker_MainActivity_ConvertSepiaFilter(JNIEnv *env, jobject thiz,
+                                                                   jlong mat_addr_input,
+                                                                   jlong mat_addr_result) {
+    Mat &matInput = *(Mat *)mat_addr_input;
+    Mat &matResult = *(Mat *)mat_addr_result;
+
+    cvtColor(matInput, matResult, COLOR_RGBA2RGB);
+    cvtColor(matInput, matInput, COLOR_RGBA2RGB);
+
+    Mat_<float> sepia(3,3);
+    sepia << .393,.769,.189  // rgb
+            ,.349,.686,.168
+            ,.272,.534,.131;
+
+    transform(matInput, matResult, sepia);}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_june_third_autoemotionsticker_MainActivity_ConvertInvertFilter(JNIEnv *env, jobject thiz,
+                                                                    jlong mat_addr_input,
+                                                                    jlong mat_addr_result) {
+
+    Mat &matInput = *(Mat *)mat_addr_input;
+    Mat &matResult = *(Mat *)mat_addr_result;
+
+
+    bitwise_not(matInput, matResult);}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_june_third_autoemotionsticker_MainActivity_ConvertDrawFilter(JNIEnv *env, jobject thiz,
+                                                                  jlong mat_addr_input,
+                                                                  jlong mat_addr_result) {
+    Mat &matInput = *(Mat *)mat_addr_input;
+    Mat &matResult = *(Mat *)mat_addr_result;
+
+    cvtColor(matInput,matResult,COLOR_RGBA2GRAY);
+    Mat srcImage = matResult;
+
+    Mat destImage1;
+    adaptiveThreshold(srcImage,destImage1,255,ADAPTIVE_THRESH_MEAN_C,THRESH_BINARY,21,5);
+    matResult = destImage1.clone();
+
+
+
+
+
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_june_third_autoemotionsticker_MainActivity_ConvertMorphologyExFilter(JNIEnv *env, jobject thiz,
+                                                                          jlong mat_addr_input,
+                                                                          jlong mat_addr_result) {
+
+
+    Mat &img_input = *(Mat *) mat_addr_input;
+    Mat &img_result = *(Mat *) mat_addr_result;
+    cvtColor(img_input, img_result, COLOR_RGBA2GRAY);
+    jstring result;
+    std::stringstream buffer;
+    Mat srcImage = img_result;
+
+    Size size(5,5);
+    Mat rectKernel = getStructuringElement(MORPH_RECT, size);
+    buffer << "rectkernel =Mat rectKernel = getStructuringElement(MORPH_RECT, size); " << endl;
+    buffer << rectKernel << endl;
+
+    int iterations = 5;
+    Point anchor(-1,-1);
+
+    Mat openImage;
+    morphologyEx(srcImage,openImage,MORPH_OPEN,rectKernel,anchor,iterations);
+//    img_result = openImage.clone();
+
+    Mat closeImage;
+    morphologyEx(srcImage,closeImage,MORPH_CLOSE,rectKernel,anchor,iterations);
+//    img_result = closeImage.clone();
+
+    Mat gradientImage;
+    morphologyEx(srcImage,gradientImage,MORPH_GRADIENT,rectKernel,anchor,iterations);
+//    img_result = gradientImage.clone();
+
+    Mat tophatImage;
+    morphologyEx(srcImage,tophatImage,MORPH_TOPHAT,rectKernel,anchor,iterations);
+//    img_result = tophatImage.clone();
+
+    Mat blackhatImage;
+    morphologyEx(srcImage,blackhatImage,MORPH_TOPHAT,rectKernel,anchor,iterations);
+    img_result = blackhatImage.clone();
+
+    const char *cstr = buffer.str().c_str();
+    result = env->NewStringUTF(cstr);
+    cvtColor(img_result,img_result, COLOR_GRAY2RGBA);
+    addWeighted(img_input, 0.7, img_result, 0.9, 0, img_result);
+//    img_result  =    realResult;
+;
+}
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_june_third_autoemotionsticker_MainActivity_ConvertMorphologyFilter(JNIEnv *env, jobject thiz,
+                                                                        jlong mat_addr_input,
+                                                                        jlong mat_addr_result) {
+
+    Mat &img_input = *(Mat *) mat_addr_input;
+    Mat &img_result = *(Mat *) mat_addr_result;
+    cvtColor(img_input, img_result, COLOR_RGBA2GRAY);
+    jstring result;
+    std::stringstream buffer;
+    Mat srcImage = img_result;
+
+    Size size(5,5);
+    Mat rectKernel = getStructuringElement(MORPH_RECT, size);
+    buffer << "rectkernel =Mat rectKernel = getStructuringElement(MORPH_RECT, size); " << endl;
+    buffer << rectKernel << endl;
+
+    int iterations = 3;
+    Point anchor(-1,-1);
+    Mat erodeImage;
+    erode(srcImage,erodeImage,rectKernel,anchor,iterations);
+    //애매
+
+//    img_result = erodeImage.clone();
+
+    Mat dilateImage;
+    dilate(srcImage,dilateImage,rectKernel,anchor,iterations);
+    //애매
+//    img_result = dilateImage.clone();
+
+    Mat ellipseKernel = getStructuringElement(MORPH_ELLIPSE,size);
+    buffer << "ellipseKernel = Mat ellipseKernel = getStructuringElement(MORPH_ELLIPSE,size);" << endl;
+    buffer << ellipseKernel << endl;
+
+    Mat erodeImage2;
+    erode(srcImage,erodeImage2,ellipseKernel,anchor,iterations);
+    //애매
+//    img_result = erodeImage2.clone();
+
+    Mat dilateImage2;
+    dilate(srcImage,dilateImage2,ellipseKernel,anchor,iterations);
+    //애매
+//    img_result = dilateImage2.clone();
+
+    Mat corssKernel = getStructuringElement(MORPH_CROSS,size);
+    buffer << "corsskernel =Mat corssKernel = getStructuringElement(MORPH_CROSS,size);" << endl;
+    buffer <<corssKernel << endl;
+
+    Mat erodeImage3;
+    erode(srcImage,erodeImage3,corssKernel,anchor,iterations);
+/*    //애매
+    img_result = erodeImage3.clone();
+    cvtColor(img_result,img_result, COLOR_GRAY2RGBA);
+    addWeighted(img_input, 0.5, img_result, 0.9, 0, img_result);*/
+
+    Mat dilateImage3;
+    dilate(srcImage,dilateImage3,corssKernel,anchor,iterations);
+    //뭔지 잘 모르겠음
+//    img_result = dilateImage3.clone();
+
+    const char *cstr = buffer.str().c_str();
+    result = env->NewStringUTF(cstr);
+
+    cvtColor(img_result,img_result, COLOR_GRAY2RGBA);
+    addWeighted(img_input, 0.5, img_result, 0.9, 0, img_result);
+
+}
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_june_third_autoemotionsticker_MainActivity_ConvertBoxFilter(JNIEnv *env, jobject thiz,
+                                                                 jlong mat_addr_input,
+                                                                 jlong mat_addr_result) {
+    Mat &matInput = *(Mat *)mat_addr_input;
+    Mat &matResult = *(Mat *)mat_addr_result;
+
+    cvtColor(matInput, matResult, COLOR_RGBA2GRAY);
+    jstring result;
+    std::stringstream buffer;
+
+    uchar dataA[]={1, 2, 4, 5, 2, 1,
+                   3, 6, 6, 9, 0, 3,
+                   1, 8, 3, 7, 2, 5,
+                   2, 9, 8, 9, 9, 1,
+                   3, 9, 8, 8, 7, 2,
+                   4, 9, 9, 9, 9, 3};
+
+/*    uchar dataA[]={0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0,
+                   0, 0, 8, 8, 0, 0,
+                   0, 0, 8, 8, 0, 0,
+                   0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0};*/
+
+    Mat A(6,6,CV_8U,dataA);
+    buffer << "A= " <<endl;
+    buffer << A << endl;
+
+    int border = 1;
+    Mat B;
+    copyMakeBorder(A,B,border,border,border,border,BORDER_REFLECT101);
+    buffer << "B = " << endl;
+    buffer << B << endl;
+
+    Size ksize(border*2 +1,border*2+1); //ksize(3,3)
+    Point anchor(0,0);
+    Mat dst1;
+    boxFilter(A,dst1,-1,ksize,anchor,false);
+
+    buffer << "dst1 = " << endl;
+    buffer << dst1 << endl;
+
+    Mat dst2;
+    boxFilter(A,dst2,-1,ksize,anchor,true);
+    buffer << "dst2 = " << endl;
+    buffer << dst2 << endl;
+
+    Mat dst3;
+    int d =ksize.width;
+    double sigmaColor = 2.0;
+    double sigmaSpace = 2.0;
+    bilateralFilter(A ,dst3,3,d,sigmaColor,sigmaSpace);
+    buffer << "dst3 = " << endl;
+    buffer << dst3 << endl;
+
+    Mat dst4;
+    bilateralFilter(A,dst4,3,-1,sigmaColor,sigmaSpace);
+    buffer << "dst4 = " <<endl;
+    buffer << dst4 << endl;
+
+    const char *cstr = buffer.str().c_str();
+    result = env->NewStringUTF(cstr);
+    matResult = dst2;
+
+}
+
+
+
+
 
 
 extern "C"
@@ -188,4 +449,10 @@ Java_june_third_autoemotionsticker_MainActivity_detect(JNIEnv *env, jobject thiz
 
 
 
+
+
+
+
 }
+
+

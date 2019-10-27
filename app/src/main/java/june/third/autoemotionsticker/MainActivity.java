@@ -6,22 +6,27 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.annotation.TargetApi;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -37,6 +42,7 @@ import java.util.concurrent.Semaphore;
 
 import static android.Manifest.permission.CAMERA;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static java.util.Arrays.asList;
 
 
 public class MainActivity extends AppCompatActivity
@@ -48,7 +54,21 @@ public class MainActivity extends AppCompatActivity
 
     private CameraBridgeViewBase mOpenCvCameraView;
 
-    //    public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
+    Handler handler;
+    public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
+    public native void ConvertInvertFilter(long matAddrInput, long matAddrResult);
+    public native void ConvertSepiaFilter(long matAddrInput, long matAddrResult);
+
+    public native void ConvertBoxFilter(long matAddrInput, long matAddrResult);
+    public native void ConvertMorphologyFilter(long matAddrInput, long matAddrResult);
+    public native void ConvertMorphologyExFilter(long matAddrInput, long matAddrResult);
+
+
+
+    public native void ConvertDrawFilter(long matAddrInput, long matAddrResult);
+    public native void ConvertMyFilter(long matAddrInput, long matAddrResult);
+
+
     public native long loadCascade(String cascadeFileName);
 
     public native void detect(long cascadeClassifier_face,
@@ -105,6 +125,8 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+
+    //분류파일 가져오기
     private void read_cascade_file(){
         copyFile("haarcascade_frontalface_alt.xml");
         copyFile("haarcascade_eye_tree_eyeglasses.xml");
@@ -149,7 +171,23 @@ public class MainActivity extends AppCompatActivity
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.activity_surface_view);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
-        mOpenCvCameraView.setCameraIndex(1); // front-camera(1),  back-camera(0)
+        mOpenCvCameraView.setCameraIndex(0); // front-camera(1),  back-camera(0)
+
+        handler = new Handler(){
+
+            public void handleMessage(Message msg){
+
+                // convert to bitmap:
+                Bitmap bm = Bitmap.createBitmap(matResult.cols(), matResult.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(matResult, bm);
+                ImageView iv = (ImageView) findViewById(R.id.imageViewTest);
+
+                iv.setImageBitmap(bm);
+
+            }
+
+        };
+
 
         Button button = (Button)findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
@@ -190,6 +228,8 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+
+
     }
 
     @Override
@@ -211,6 +251,8 @@ public class MainActivity extends AppCompatActivity
 
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+
+
     }
 
     @Override
@@ -226,23 +268,40 @@ public class MainActivity extends AppCompatActivity
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
 
-
-
         try {
             getWriteLock();
         matInput = inputFrame.rgba();
 
         if (matResult == null)
-
             matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
-        // 기존 코드 주석처리(흑백)
 
-//        ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+/*        //1. 그레이 필터
+        ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());*/
 
-        Core.flip(matInput, matInput, 1);
+
+        //2. 얼굴인식 필터
+/*        Core.flip(matInput, matInput, 1);
 
         detect(cascadeClassifier_face,cascadeClassifier_eye, matInput.getNativeObjAddr(),
-                matResult.getNativeObjAddr());
+                matResult.getNativeObjAddr());*/
+
+        //3. 연필로 그린거 같은 필터(draw Filter => 쓰레쉬 홀드)
+//            ConvertDrawFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+
+        //4. 뭉개지는 필터?
+//            ConvertMorphologyFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+
+        //5. 뭉개지는 필터 ex?
+//            ConvertMorphologyExFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+
+/*            //6. 반전필터
+            ConvertInvertFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());*/
+
+            //7. sepia 필터
+            ConvertSepiaFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+
+/*           //8. 박스 필터
+            ConvertBoxFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());*/
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -250,13 +309,29 @@ public class MainActivity extends AppCompatActivity
 
         releaseWriteLock();
 
+
+
+        // find the imageview and draw it!
+
+
+
+        Message msg = handler.obtainMessage();
+
+        handler.sendMessage(msg);
+
+
+
+
         return matResult;
     }
 
 
     protected List<? extends CameraBridgeViewBase> getCameraViewList() {
-        return Collections.singletonList(mOpenCvCameraView);
+//        return Collections.singletonList(mOpenCvCameraView);
+        List<? extends CameraBridgeViewBase> cameraList = asList(mOpenCvCameraView);
+            return cameraList;
     }
+
 
 
     //여기서부턴 퍼미션 관련 메소드
@@ -271,12 +346,15 @@ public class MainActivity extends AppCompatActivity
         for (CameraBridgeViewBase cameraBridgeViewBase : cameraViews) {
             if (cameraBridgeViewBase != null) {
                 cameraBridgeViewBase.setCameraPermissionGranted();
-
                 read_cascade_file();
-
             }
         }
     }
+
+
+
+
+
 
     @Override
     protected void onStart() {
@@ -291,6 +369,7 @@ public class MainActivity extends AppCompatActivity
         }
         if (havePermission) {
             onCameraPermissionGranted();
+//            onCameraPermissionGrantedSample();
         }
     }
 
@@ -301,6 +380,7 @@ public class MainActivity extends AppCompatActivity
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] ==
                 PackageManager.PERMISSION_GRANTED) {
             onCameraPermissionGranted();
+//            onCameraPermissionGrantedSample();
         } else {
             showDialogForPermission("앱을 실행하려면 퍼미션을 허가하셔야합니다.");
         }

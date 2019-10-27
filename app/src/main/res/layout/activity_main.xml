@@ -18,9 +18,16 @@
 
     <org.opencv.android.JavaCameraView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight = "1"
         opencv:camera_id="any"
-        android:visibility="gone"
+        android:visibility="visible"
         android:id="@+id/activity_surface_view" />
+
+    <ImageView
+        android:id="@+id/imageViewTest"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        opencv:srcCompat="@android:drawable/alert_dark_frame" />
 
 </LinearLayout>
