@@ -183,4 +183,9 @@ Java_june_third_autoemotionsticker_MainActivity_detect(JNIEnv *env, jobject thiz
 
 
 
+
+
+
+
+
 }

@@ -3,6 +3,7 @@ package org.opencv.android;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import android.app.ActionBar;
 import android.content.Context;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
@@ -101,9 +102,13 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                         if (connected) break;
                     }
                 }
+
+
             } else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
                     int localCameraIndex = mCameraIndex;
+
+
                     if (mCameraIndex == CAMERA_ID_BACK) {
                         Log.i(TAG, "Trying to open back camera");
                         Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
@@ -126,6 +131,8 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                             }
                         }
                     }
+
+
                     if (localCameraIndex == CAMERA_ID_BACK) {
                         Log.e(TAG, "Back camera not found!");
                     } else if (localCameraIndex == CAMERA_ID_FRONT) {
@@ -153,6 +160,9 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                 if (sizes != null) {
                     /* Select the size that fits surface considering maximum size allowed */
                     Size frameSize = calculateCameraFrameSize(sizes, new JavaCameraSizeAccessor(), width, height);
+
+
+
 
                     /* Image format NV21 causes issues in the Android emulators */
                     if (Build.FINGERPRINT.startsWith("generic")
@@ -183,6 +193,8 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                     mCamera.setParameters(params);
                     params = mCamera.getParameters();
 
+
+
                     mFrameWidth = params.getPreviewSize().width;
                     mFrameHeight = params.getPreviewSize().height;
 
@@ -190,6 +202,14 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                         mScale = Math.min(((float) height) / mFrameHeight, ((float) width) / mFrameWidth);
                     else
                         mScale = 0;
+
+/*                    //화면세우기
+                    if ((getLayoutParams().width == ActionBar.LayoutParams.MATCH_PARENT) && (getLayoutParams().height == ActionBar.LayoutParams.MATCH_PARENT))
+                        mScale = Math.min(((float)height)/mFrameWidth, ((float)width)/mFrameHeight);
+                    else
+                        mScale = 0;*/
+
+
 
                     if (mFpsMeter != null) {
                         mFpsMeter.setResolution(mFrameWidth, mFrameHeight);
@@ -202,19 +222,30 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                     mCamera.addCallbackBuffer(mBuffer);
                     mCamera.setPreviewCallbackWithBuffer(this);
 
+
+
                     mFrameChain = new Mat[2];
                     mFrameChain[0] = new Mat(mFrameHeight + (mFrameHeight / 2), mFrameWidth, CvType.CV_8UC1);
                     mFrameChain[1] = new Mat(mFrameHeight + (mFrameHeight / 2), mFrameWidth, CvType.CV_8UC1);
 
+
+
                     AllocateCache();
+
+
 
                     mCameraFrame = new JavaCameraFrame[2];
                     mCameraFrame[0] = new JavaCameraFrame(mFrameChain[0], mFrameWidth, mFrameHeight);
                     mCameraFrame[1] = new JavaCameraFrame(mFrameChain[1], mFrameWidth, mFrameHeight);
 
+
+
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
                         mSurfaceTexture = new SurfaceTexture(MAGIC_TEXTURE_ID);
+
+
                         mCamera.setPreviewTexture(mSurfaceTexture);
+
                     } else
                         mCamera.setPreviewDisplay(null);
 
@@ -225,8 +256,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                     setDisplayOrientation(mCamera, 90);
                     mCamera.setPreviewDisplay(getHolder());*/
 
-
-
+                    mCamera.setDisplayOrientation(90);
                     mCamera.startPreview();
                 } else
                     result = false;

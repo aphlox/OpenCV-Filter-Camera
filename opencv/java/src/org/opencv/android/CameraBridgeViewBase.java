@@ -14,6 +14,7 @@ import android.content.DialogInterface;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -57,16 +58,26 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     public static final int RGBA = 1;
     public static final int GRAY = 2;
 
+
+
+
     public CameraBridgeViewBase(Context context, int cameraId) {
         super(context);
         mCameraIndex = cameraId;
         getHolder().addCallback(this);
         mMaxWidth = MAX_UNSPECIFIED;
         mMaxHeight = MAX_UNSPECIFIED;
+
+
+
+
     }
 
     public CameraBridgeViewBase(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+
+
 
         int count = attrs.getAttributeCount();
         Log.d(TAG, "Attr count: " + Integer.valueOf(count));
@@ -437,23 +448,33 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
                 if (mScale != 0) {
                     canvas.scale(mScale, mScale,0,0);
                 }
-                canvas.drawBitmap(mCacheBitmap, 0, -mCacheBitmap.getHeight(), null);*/
+                canvas.drawBitmap(mCacheBitmap, 0, -mCa
+
+
+               cheBitmap.getHeight(), null);*/
+
+
+
+                Matrix matrix = new Matrix();
+                matrix.setRotate(90f);
+                Bitmap bitmap = Bitmap.createBitmap(mCacheBitmap, 0, 0, mCacheBitmap.getWidth(), mCacheBitmap.getHeight(), matrix, true);
+
 
                 if (BuildConfig.DEBUG)
                     Log.d(TAG, "mStretch value: " + mScale);
 
                 if (mScale != 0) {
-                    canvas.drawBitmap(mCacheBitmap, new Rect(0,0,mCacheBitmap.getWidth(), mCacheBitmap.getHeight()),
-                         new Rect((int)((canvas.getWidth() - mScale*mCacheBitmap.getWidth()) / 2),
-                         (int)((canvas.getHeight() - mScale*mCacheBitmap.getHeight()) / 2),
-                         (int)((canvas.getWidth() - mScale*mCacheBitmap.getWidth()) / 2 + mScale*mCacheBitmap.getWidth()),
-                         (int)((canvas.getHeight() - mScale*mCacheBitmap.getHeight()) / 2 + mScale*mCacheBitmap.getHeight())), null);
+                    canvas.drawBitmap(bitmap, new Rect(0,0,bitmap.getWidth(), bitmap.getHeight()),
+                         new Rect((int)((canvas.getWidth() - mScale*bitmap.getWidth()) / 2),
+                         (int)((canvas.getHeight() - mScale*bitmap.getHeight()) / 2),
+                         (int)((canvas.getWidth() - mScale*bitmap.getWidth()) / 2 + mScale*bitmap.getWidth()),
+                         (int)((canvas.getHeight() - mScale*bitmap.getHeight()) / 2 + mScale*bitmap.getHeight())), null);
                 } else {
-                     canvas.drawBitmap(mCacheBitmap, new Rect(0,0,mCacheBitmap.getWidth(), mCacheBitmap.getHeight()),
-                         new Rect((canvas.getWidth() - mCacheBitmap.getWidth()) / 2,
-                         (canvas.getHeight() - mCacheBitmap.getHeight()) / 2,
-                         (canvas.getWidth() - mCacheBitmap.getWidth()) / 2 + mCacheBitmap.getWidth(),
-                         (canvas.getHeight() - mCacheBitmap.getHeight()) / 2 + mCacheBitmap.getHeight()), null);
+                     canvas.drawBitmap(bitmap, new Rect(0,0,bitmap.getWidth(), bitmap.getHeight()),
+                         new Rect((canvas.getWidth() - bitmap.getWidth()) / 2,
+                         (canvas.getHeight() - bitmap.getHeight()) / 2,
+                         (canvas.getWidth() - bitmap.getWidth()) / 2 + bitmap.getWidth(),
+                         (canvas.getHeight() - bitmap.getHeight()) / 2 + bitmap.getHeight()), null);
                 }
 
                 if (mFpsMeter != null) {
