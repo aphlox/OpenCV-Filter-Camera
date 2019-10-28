@@ -49,27 +49,40 @@ public class MainActivity extends AppCompatActivity
         implements CameraBridgeViewBase.CvCameraViewListener2 {
 
     private static final String TAG = "opencv";
-    private Mat matInput;
-    private Mat matResult;
 
-    private Mat matSepia;
-    private Mat matDraw;
-    private Mat matInvert;
-    private Mat matGray;
+    //OpenCV 매트릭스--------------------------------------------------------------------------------
+    private Mat matInput;   //카메라 프리뷰에서 받는 매트릭스
+    private Mat matResult;  //프리뷰에서 받은 matInput 의 변환 후의 출력되는 매트릭스
 
-    ImageView ivOriginal;
-    ImageView ivSepia;
-    ImageView ivSketch;
-    ImageView ivInvert;
-    ImageView ivGray;
+    private Mat matSepia;   //세피아 필터가 적용되는 매트릭스
+    private Mat matSketch;    //스케치 필터(정확히는 쓰레스홀드 필터)가 적용되는 매트릭스
+    private Mat matInvert;  //반전 필터가 적용되는 매트릭스
+    private Mat matGray;    //그레이 필터가 적용되는 매트릭스
+    //----------------------------------------------------------------------------------------------
+
+    //미리보기 이미지뷰-------------------------------------------------------------------------------
+    ImageView ivOriginal;   //원본 미리보기하는 이미지뷰
+    ImageView ivSepia;      //세피아 필터 적용된 모습 미리 볼 수 있는 이미지뷰
+    ImageView ivSketch;     //스케치 필터 적용된 모습 미리 볼 수 있는 이미지뷰
+    ImageView ivInvert;     //반전 필터 적용된 모습 미리 볼 수 있는 이미지뷰
+    ImageView ivGray;       //그레이 필터 적용된 모습 미리 볼 수 있는 이미지뷰
+    //----------------------------------------------------------------------------------------------
+
+    //핵심 변수들------------------------------------------------------------------------------------
+    //OpenCV 카메라뷰
     private CameraBridgeViewBase mOpenCvCameraView;
-    ImageView imageeCameraButton;
-    Handler handler;
-    Matrix matrix2;
-
+    //카메라 버튼(원 이미지)
+    ImageView imageCameraButton;
+    //필터적용된 모습을 실시간으로 보여주게 해주는 핸들러
+    Handler previewHandler;
+    //회전용 매트릭스
+    Matrix rotatedMatrix;
+    //필터 변환용 int 값
     private int filterChoice;
 
+    //----------------------------------------------------------------------------------------------
 
+    //opencv 필터들----------------------------------------------------------------------------------
     public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
 
     public native void ConvertInvertFilter(long matAddrInput, long matAddrResult);
@@ -82,22 +95,22 @@ public class MainActivity extends AppCompatActivity
 
     public native void ConvertMorphologyExFilter(long matAddrInput, long matAddrResult);
 
-
-    public native void ConvertDrawFilter(long matAddrInput, long matAddrResult);
+    public native void ConvertSketchFilter(long matAddrInput, long matAddrResult);
 
     public native void ConvertMyFilter(long matAddrInput, long matAddrResult);
 
+    //----------------------------------------------------------------------------------------------
 
+    //얼굴인식---------------------------------------------------------------------------------------
     public native long loadCascade(String cascadeFileName);
 
+    //얼굴하고 눈 찾아주는 detect
     public native void detect(long cascadeClassifier_face,
-
                               long cascadeClassifier_eye, long matAddrInput, long matAddrResult);
-
     public long cascadeClassifier_face = 0;
     public long cascadeClassifier_eye = 0;
 
-
+    //세마포어 (동기화?) 아직 모름
     private final Semaphore writeLock = new Semaphore(1);
 
     public void getWriteLock() throws InterruptedException {
@@ -107,6 +120,9 @@ public class MainActivity extends AppCompatActivity
     public void releaseWriteLock() {
         writeLock.release();
     }
+    //----------------------------------------------------------------------------------------------
+
+
 
 
     static {
@@ -191,54 +207,54 @@ public class MainActivity extends AppCompatActivity
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.setCameraIndex(0); // front-camera(1),  back-camera(0)
-        ivOriginal =  findViewById(R.id.ivOriginal);
 
+        //필터적용 미리보는 이미지뷰들
+        ivOriginal =  findViewById(R.id.ivOriginal);
         ivSepia =  findViewById(R.id.ivSepia);
         ivSketch =  findViewById(R.id.ivSketch);
         ivInvert =  findViewById(R.id.ivInvert);
         ivGray =  findViewById(R.id.ivGray);
 
 
-        matrix2 = new Matrix();
+        rotatedMatrix = new Matrix();
+        rotatedMatrix.postRotate(90);
 
-        matrix2.postRotate(90);
-        handler = new Handler() {
+        previewHandler = new Handler() {
 
             public void handleMessage(Message msg) {
-
-
-//                Bitmap bitmap = Bitmap.createBitmap(mCacheBitmap, 0, 0, mCacheBitmap.getWidth(), mCacheBitmap.getHeight(), matrix, true);
-
+                /*  아직 매트릭스를 마지막 부분에서 임시로 돌린 상태 ( 처음부분(근본적인 부분)에서 돌린게 아니라)
+                 *  그래서 나중에 근본적인 매트릭스를 회전시켜줘야함 (근본적인 단계에서 안 돌려주면 얼굴인식을 portrait(세로)에서 했을때
+                 *  옆으로 기울여야 인식이 됨 나중에 시간 여유되면 천천히 공부하면서 구현
+                 */
                 // 원본
                 Bitmap bmOriginal = Bitmap.createBitmap(matInput.cols(), matInput.rows(), Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(matInput, bmOriginal);
-                Bitmap rotatedbmOriginal = Bitmap.createBitmap(bmOriginal, 0, 0, bmOriginal.getWidth(), bmOriginal.getHeight(), matrix2, true);
-                ivOriginal.setImageBitmap(rotatedbmOriginal);
+                Bitmap rotatedBmOriginal = Bitmap.createBitmap(bmOriginal, 0, 0, bmOriginal.getWidth(), bmOriginal.getHeight(), rotatedMatrix, true);
+                ivOriginal.setImageBitmap(rotatedBmOriginal);
 
-
-
-
-                // convert to bitmap:
+                //세피아
                 Bitmap bmSepia = Bitmap.createBitmap(matSepia.cols(), matSepia.rows(), Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(matSepia, bmSepia);
-                Bitmap rotatedbmSepia = Bitmap.createBitmap(bmSepia, 0, 0, bmSepia.getWidth(), bmSepia.getHeight(), matrix2, true);
-                ivSepia.setImageBitmap(rotatedbmSepia);
+                Bitmap rotatedBmSepia = Bitmap.createBitmap(bmSepia, 0, 0, bmSepia.getWidth(), bmSepia.getHeight(), rotatedMatrix, true);
+                ivSepia.setImageBitmap(rotatedBmSepia);
 
+                //스케치
+                Bitmap bmSketch = Bitmap.createBitmap(matSketch.cols(), matSketch.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(matSketch, bmSketch);
+                Bitmap rotatedBmSketch = Bitmap.createBitmap(bmSketch, 0, 0, bmSketch.getWidth(), bmSketch.getHeight(), rotatedMatrix, true);
+                ivSketch.setImageBitmap(rotatedBmSketch);
 
-                Bitmap bmDraw = Bitmap.createBitmap(matDraw.cols(), matDraw.rows(), Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(matDraw, bmDraw);
-                Bitmap rotatedbmDraw = Bitmap.createBitmap(bmDraw, 0, 0, bmDraw.getWidth(), bmDraw.getHeight(), matrix2, true);
-                ivSketch.setImageBitmap(rotatedbmDraw);
-
+                //반전
                 Bitmap bmInvert = Bitmap.createBitmap(matInvert.cols(), matInvert.rows(), Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(matInvert, bmInvert);
-                Bitmap rotatedbmInvert = Bitmap.createBitmap(bmInvert, 0, 0, bmInvert.getWidth(), bmInvert.getHeight(), matrix2, true);
-                ivInvert.setImageBitmap(rotatedbmInvert);
+                Bitmap rotatedBmInvert = Bitmap.createBitmap(bmInvert, 0, 0, bmInvert.getWidth(), bmInvert.getHeight(), rotatedMatrix, true);
+                ivInvert.setImageBitmap(rotatedBmInvert);
 
+                //그레이
                 Bitmap bmGray = Bitmap.createBitmap(matGray.cols(), matGray.rows(), Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(matGray, bmGray);
-                Bitmap rotatedBitmap = Bitmap.createBitmap(bmGray, 0, 0, bmGray.getWidth(), bmGray.getHeight(), matrix2, true);
-                ivGray.setImageBitmap(rotatedBitmap);
+                Bitmap rotatedBmGray = Bitmap.createBitmap(bmGray, 0, 0, bmGray.getWidth(), bmGray.getHeight(), rotatedMatrix, true);
+                ivGray.setImageBitmap(rotatedBmGray);
 
 
             }
@@ -246,6 +262,8 @@ public class MainActivity extends AppCompatActivity
         };
 
 
+        //이미지 미리보기를 누를때 해당 필터 번호로 바뀐다.
+        //ex) 원본은 0, 스케치는 2
         ivOriginal.setOnClickListener(v ->{
             Toast.makeText(getApplicationContext()  , "원본", Toast.LENGTH_LONG).show();
             filterChoice = 0;
@@ -272,8 +290,8 @@ public class MainActivity extends AppCompatActivity
         });
 
 
-        imageeCameraButton = findViewById(R.id.imageCameraButton);
-        imageeCameraButton.setOnClickListener(new View.OnClickListener() {
+        imageCameraButton = findViewById(R.id.imageCameraButton);
+        imageCameraButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
                 try {
@@ -288,11 +306,14 @@ public class MainActivity extends AppCompatActivity
                     Imgproc.cvtColor(matResult, matResult, Imgproc.COLOR_BGR2RGBA);
 
                     //matResult 의 가로세로 바꾸어넣음..(원래 rows 다음에 colos 가 옴)
+                    //돌린 사진을 저장하기 위해서
                     Mat saveMat = new Mat(matResult.cols(), matResult.rows(), matResult.type());
 
                     Bitmap bmDraw = Bitmap.createBitmap(matResult.cols(), matResult.rows(), Bitmap.Config.ARGB_8888);
                     Utils.matToBitmap(matResult, bmDraw);
-                    Bitmap rotatedbmDraw = Bitmap.createBitmap(bmDraw, 0, 0, bmDraw.getWidth(), bmDraw.getHeight(), matrix2, true);
+                    //저장할때 안 돌아간 매트릭스로(프리뷰에서는 돌려놔서 제대로 되어있는 것 처럼 보이지만) 저장된다(돌아가 있음)
+                    //그래서 저장할떄 회전 시켜서 저장해줘야 제대로 돌아간 상태로 저장됨
+                    Bitmap rotatedbmDraw = Bitmap.createBitmap(bmDraw, 0, 0, bmDraw.getWidth(), bmDraw.getHeight(), rotatedMatrix, true);
                     Utils.bitmapToMat(rotatedbmDraw, saveMat);
 
                     boolean ret = Imgcodecs.imwrite(filename, saveMat);
@@ -313,13 +334,16 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        imageeCameraButton.setOnTouchListener(new View.OnTouchListener() {
+        //카메라 버튼 눌러을때 누른 느낌들게 효과줌
+        imageCameraButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    imageeCameraButton.setImageDrawable(getResources().getDrawable(R.drawable.circle_click));
+                    //눌렀을떄 원래 원 이미지도 보다 선이 굵은 원 이미지를 보여줘서 눌렸다는 느낌을 준다
+                    //다만 너무 짧게 눌렀을때 티가 안나서 나중에 다른 방식으로 보완해서 구현하기
+                    imageCameraButton.setImageDrawable(getResources().getDrawable(R.drawable.circle_click));
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    imageeCameraButton.setImageDrawable(getResources().getDrawable(R.drawable.circle));
+                    imageCameraButton.setImageDrawable(getResources().getDrawable(R.drawable.circle));
 
                 }
 
@@ -376,6 +400,8 @@ public class MainActivity extends AppCompatActivity
 
         try {
             getWriteLock();
+            //카메라 프레임(매트릭스) 받아오기
+            //rgba => rgb + 알파채널(투명도)
             matInput = inputFrame.rgba();
 
 
@@ -384,7 +410,7 @@ public class MainActivity extends AppCompatActivity
 
 
             matSepia = matResult.clone();
-            matDraw = matResult.clone();
+            matSketch = matResult.clone();
             matInvert = matResult.clone();
             matGray = matResult.clone();
 
@@ -393,8 +419,8 @@ public class MainActivity extends AppCompatActivity
             ConvertSepiaFilter(matInput.getNativeObjAddr(), matSepia.getNativeObjAddr());
 
 
-            //2. 연필로 그린거 같은 필터(draw Filter/Sketch Filter => 쓰레쉬 홀드)
-            ConvertDrawFilter(matInput.getNativeObjAddr(), matDraw.getNativeObjAddr());
+            //2. 연필로 그린거 같은 필터(Sketch Filter =>  쓰레쉬 홀드 필터)
+            ConvertSketchFilter(matInput.getNativeObjAddr(), matSketch.getNativeObjAddr());
 
             //3. 반전필터
             ConvertInvertFilter(matInput.getNativeObjAddr(), matInvert.getNativeObjAddr());
@@ -403,6 +429,7 @@ public class MainActivity extends AppCompatActivity
             ConvertRGBtoGray(matInput.getNativeObjAddr(), matGray.getNativeObjAddr());
 
 
+            //필터 선택하는 값에 따라 알맞은 필터 적용
             switch (filterChoice) {
 
                 case 1:
@@ -413,8 +440,8 @@ public class MainActivity extends AppCompatActivity
 
                 case 2:
                     //2. 연필로 그린거 같은 필터(draw Filter/Sketch Filter => 쓰레쉬 홀드)
-                    ConvertDrawFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
-                    Log.w(TAG, "ConvertDrawFilter: " +filterChoice);
+                    ConvertSketchFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+                    Log.w(TAG, "ConvertSketchFilter: " +filterChoice);
                     break;
 
                 case 3:
@@ -463,8 +490,8 @@ public class MainActivity extends AppCompatActivity
         releaseWriteLock();
 
         // find the imageview and draw it!
-        Message msg = handler.obtainMessage();
-        handler.sendMessage(msg);
+        Message msg = previewHandler.obtainMessage();
+        previewHandler.sendMessage(msg);
 
 
         return matResult;

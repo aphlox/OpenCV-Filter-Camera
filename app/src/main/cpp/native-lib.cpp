@@ -48,14 +48,15 @@ Java_june_third_autoemotionsticker_MainActivity_ConvertRGBtoGray(JNIEnv *env, jo
 extern "C"
 JNIEXPORT void JNICALL
 Java_june_third_autoemotionsticker_MainActivity_ConvertMyFilter(JNIEnv *env, jobject thiz,
-                                                                jlong mat_addr_input,
-                                                                jlong mat_addr_result) {
+                                                                jlong matAddrInput,
+                                                                jlong matAddrResult) {
 
-    Mat &matInput = *(Mat *)mat_addr_input;
-    Mat &matResult = *(Mat *)mat_addr_result;
+    Mat &matInput = *(Mat *)matAddrInput;
+    Mat &matResult = *(Mat *)matAddrResult;
 
 
-/*    Point2f src_center(source.cols/2.0F, source.rows/2.0F);
+/* 매트릭스 회전 코드 => 아직 검증 못함
+ * Point2f src_center(source.cols/2.0F, source.rows/2.0F);
     Mat rot_mat = getRotationMatrix2D(src_center, angle, 1.0);
     Mat dst;
     warpAffine(source, dst, rot_mat, source.size());*/
@@ -69,11 +70,13 @@ Java_june_third_autoemotionsticker_MainActivity_ConvertMyFilter(JNIEnv *env, job
 extern "C"
 JNIEXPORT void JNICALL
 Java_june_third_autoemotionsticker_MainActivity_ConvertSepiaFilter(JNIEnv *env, jobject thiz,
-                                                                   jlong mat_addr_input,
-                                                                   jlong mat_addr_result) {
-    Mat &matInput = *(Mat *)mat_addr_input;
-    Mat &matResult = *(Mat *)mat_addr_result;
+                                                                   jlong matAddrInput,
+                                                                   jlong matAddrResult) {
+    Mat &matInput = *(Mat *)matAddrInput;
+    Mat &matResult = *(Mat *)matAddrResult;
 
+    //세파아 필터를 적용하기 위해
+    //RGBA => RGB 로 채널을 줄인다
     cvtColor(matInput, matResult, COLOR_RGBA2RGB);
     cvtColor(matInput, matInput, COLOR_RGBA2RGB);
 
@@ -87,27 +90,29 @@ Java_june_third_autoemotionsticker_MainActivity_ConvertSepiaFilter(JNIEnv *env, 
 extern "C"
 JNIEXPORT void JNICALL
 Java_june_third_autoemotionsticker_MainActivity_ConvertInvertFilter(JNIEnv *env, jobject thiz,
-                                                                    jlong mat_addr_input,
-                                                                    jlong mat_addr_result) {
+                                                                    jlong matAddrInput,
+                                                                    jlong matAddrResult) {
 
-    Mat &matInput = *(Mat *)mat_addr_input;
-    Mat &matResult = *(Mat *)mat_addr_result;
+    Mat &matInput = *(Mat *)matAddrInput;
+    Mat &matResult = *(Mat *)matAddrResult;
 
-
+    //반전
     bitwise_not(matInput, matResult);}
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_june_third_autoemotionsticker_MainActivity_ConvertDrawFilter(JNIEnv *env, jobject thiz,
-                                                                  jlong mat_addr_input,
-                                                                  jlong mat_addr_result) {
-    Mat &matInput = *(Mat *)mat_addr_input;
-    Mat &matResult = *(Mat *)mat_addr_result;
+Java_june_third_autoemotionsticker_MainActivity_ConvertSketchFilter(JNIEnv *env, jobject thiz,
+                                                                  jlong matAddrInput,
+                                                                  jlong matAddrResult) {
+    Mat &matInput = *(Mat *)matAddrInput;
+    Mat &matResult = *(Mat *)matAddrResult;
+
 
     cvtColor(matInput,matResult,COLOR_RGBA2GRAY);
     Mat srcImage = matResult;
 
     Mat destImage1;
+    //쓰레쉬 홀드(역치) 어느정도의 값이 넘으면 흰색 아니면 검은색으로 나눈다 (아직 정확하지 않음 - 공부중)
     adaptiveThreshold(srcImage,destImage1,255,ADAPTIVE_THRESH_MEAN_C,THRESH_BINARY,21,5);
     matResult = destImage1.clone();
 
@@ -119,12 +124,12 @@ Java_june_third_autoemotionsticker_MainActivity_ConvertDrawFilter(JNIEnv *env, j
 extern "C"
 JNIEXPORT void JNICALL
 Java_june_third_autoemotionsticker_MainActivity_ConvertMorphologyExFilter(JNIEnv *env, jobject thiz,
-                                                                          jlong mat_addr_input,
-                                                                          jlong mat_addr_result) {
+                                                                          jlong matAddrInput,
+                                                                          jlong matAddrResult) {
 
 
-    Mat &img_input = *(Mat *) mat_addr_input;
-    Mat &img_result = *(Mat *) mat_addr_result;
+    Mat &img_input = *(Mat *) matAddrInput;
+    Mat &img_result = *(Mat *) matAddrResult;
     cvtColor(img_input, img_result, COLOR_RGBA2GRAY);
     jstring result;
     std::stringstream buffer;
@@ -170,13 +175,13 @@ Java_june_third_autoemotionsticker_MainActivity_ConvertMorphologyExFilter(JNIEnv
 extern "C"
 JNIEXPORT void JNICALL
 Java_june_third_autoemotionsticker_MainActivity_ConvertMorphologyFilter(JNIEnv *env, jobject thiz,
-                                                                        jlong mat_addr_input,
-                                                                        jlong mat_addr_result) {
+                                                                        jlong matAddrInput,
+                                                                        jlong matAddrResult) {
 
 
 
-    Mat &img_input = *(Mat *) mat_addr_input;
-    Mat &img_result = *(Mat *) mat_addr_result;
+    Mat &img_input = *(Mat *) matAddrInput;
+    Mat &img_result = *(Mat *) matAddrResult;
     cvtColor(img_input, img_result, COLOR_RGBA2GRAY);
     jstring result;
     std::stringstream buffer;
@@ -242,10 +247,10 @@ Java_june_third_autoemotionsticker_MainActivity_ConvertMorphologyFilter(JNIEnv *
 extern "C"
 JNIEXPORT void JNICALL
 Java_june_third_autoemotionsticker_MainActivity_ConvertBoxFilter(JNIEnv *env, jobject thiz,
-                                                                 jlong mat_addr_input,
-                                                                 jlong mat_addr_result) {
-    Mat &matInput = *(Mat *)mat_addr_input;
-    Mat &matResult = *(Mat *)mat_addr_result;
+                                                                 jlong matAddrInput,
+                                                                 jlong matAddrResult) {
+    Mat &matInput = *(Mat *)matAddrInput;
+    Mat &matResult = *(Mat *)matAddrResult;
 
     cvtColor(matInput, matResult, COLOR_RGBA2GRAY);
     jstring result;
@@ -363,12 +368,12 @@ JNIEXPORT void JNICALL
 Java_june_third_autoemotionsticker_MainActivity_detect(JNIEnv *env, jobject thiz,
                                                        jlong cascade_classifier_face,
                                                        jlong cascade_classifier_eye,
-                                                       jlong mat_addr_input,
-                                                       jlong mat_addr_result) {
+                                                       jlong matAddrInput,
+                                                       jlong matAddrResult) {
 
-    Mat &img_input = *(Mat *) mat_addr_input;
+    Mat &img_input = *(Mat *) matAddrInput;
 
-    Mat &img_result = *(Mat *) mat_addr_result;
+    Mat &img_result = *(Mat *) matAddrResult;
 
 
     img_result = img_input.clone();
