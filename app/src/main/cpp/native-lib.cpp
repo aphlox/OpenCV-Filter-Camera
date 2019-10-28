@@ -55,7 +55,10 @@ Java_june_third_autoemotionsticker_MainActivity_ConvertMyFilter(JNIEnv *env, job
     Mat &matResult = *(Mat *)mat_addr_result;
 
 
-
+/*    Point2f src_center(source.cols/2.0F, source.rows/2.0F);
+    Mat rot_mat = getRotationMatrix2D(src_center, angle, 1.0);
+    Mat dst;
+    warpAffine(source, dst, rot_mat, source.size());*/
 
 
 
@@ -169,6 +172,8 @@ JNIEXPORT void JNICALL
 Java_june_third_autoemotionsticker_MainActivity_ConvertMorphologyFilter(JNIEnv *env, jobject thiz,
                                                                         jlong mat_addr_input,
                                                                         jlong mat_addr_result) {
+
+
 
     Mat &img_input = *(Mat *) mat_addr_input;
     Mat &img_result = *(Mat *) mat_addr_result;

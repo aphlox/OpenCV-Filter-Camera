@@ -1,33 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:opencv="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#000000"
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="캡쳐" />
-
 
     <org.opencv.android.JavaCameraView
+        android:id="@+id/activity_surface_view"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight = "1"
-        opencv:camera_id="any"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
         android:visibility="visible"
-        android:id="@+id/activity_surface_view" />
+        opencv:camera_id="any" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="#000000">
+
+
+            <ImageView
+                android:id="@+id/ivOriginal"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                opencv:layout_constraintBottom_toTopOf="@+id/textView"
+                opencv:layout_constraintStart_toStartOf="parent"
+                opencv:layout_constraintTop_toTopOf="parent"
+                opencv:srcCompat="@android:drawable/alert_dark_frame" />
+
+
+            <ImageView
+                android:id="@+id/ivSepia"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                opencv:layout_constraintBottom_toTopOf="@+id/textView"
+                opencv:layout_constraintStart_toEndOf="@+id/ivOriginal"
+                opencv:layout_constraintTop_toTopOf="parent"
+                opencv:srcCompat="@android:drawable/alert_dark_frame" />
+
+
+            <ImageView
+                android:id="@+id/ivSketch"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                opencv:layout_constraintBottom_toTopOf="@+id/textView2"
+                opencv:layout_constraintStart_toEndOf="@+id/ivSepia"
+                opencv:srcCompat="@android:drawable/alert_dark_frame" />
+
+            <ImageView
+                android:id="@+id/ivInvert"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                opencv:layout_constraintBottom_toTopOf="@+id/textView3"
+
+                opencv:layout_constraintStart_toEndOf="@+id/ivSketch"
+                opencv:srcCompat="@android:drawable/alert_dark_frame"
+                tools:layout_editor_absoluteY="26dp" />
+
+            <ImageView
+                android:id="@+id/ivGray"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                opencv:layout_constraintBottom_toTopOf="@+id/textView4"
+                opencv:layout_constraintStart_toEndOf="@+id/ivInvert"
+
+                opencv:srcCompat="@android:drawable/alert_dark_frame" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/melona_font"
+
+                android:text="세피아"
+                android:textColor="#ffffff"
+                android:textSize="20dp"
+
+
+                opencv:layout_constraintBottom_toBottomOf="parent"
+                opencv:layout_constraintEnd_toEndOf="@+id/ivSepia"
+                opencv:layout_constraintStart_toStartOf="@+id/ivSepia" />
+
+            <TextView
+                android:id="@+id/textView5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:fontFamily="@font/melona_font"
+                android:text="원본"
+                android:textColor="#ffffff"
+
+
+                android:textSize="20dp"
+                opencv:layout_constraintBottom_toBottomOf="parent"
+                opencv:layout_constraintEnd_toEndOf="@+id/ivOriginal"
+                opencv:layout_constraintStart_toStartOf="@+id/ivOriginal" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/melona_font"
+
+                android:text="스케치"
+                android:textColor="#ffffff"
+
+
+                android:textSize="20dp"
+                opencv:layout_constraintBottom_toBottomOf="parent"
+                opencv:layout_constraintEnd_toEndOf="@+id/ivSketch"
+                opencv:layout_constraintStart_toStartOf="@+id/ivSketch" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/melona_font"
+
+                android:text="반전"
+                android:textColor="#ffffff"
+
+
+                android:textSize="20dp"
+                opencv:layout_constraintBottom_toBottomOf="parent"
+                opencv:layout_constraintEnd_toEndOf="@+id/ivInvert"
+                opencv:layout_constraintStart_toStartOf="@+id/ivInvert" />
+
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:fontFamily="@font/melona_font"
+                android:text="그레이"
+                android:textColor="#ffffff"
+
+
+                android:textSize="20dp"
+                opencv:layout_constraintBottom_toBottomOf="parent"
+                opencv:layout_constraintEnd_toEndOf="@+id/ivGray"
+                opencv:layout_constraintStart_toStartOf="@+id/ivGray" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </HorizontalScrollView>
 
     <ImageView
-        android:id="@+id/imageViewTest"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        opencv:srcCompat="@android:drawable/alert_dark_frame" />
+        android:id="@+id/imageCameraButton"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+
+
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_gravity="center"
+        android:tint="#ffffff"
+        opencv:srcCompat="@drawable/circle"
+
+        />
 
 </LinearLayout>

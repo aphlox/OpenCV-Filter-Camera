@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
 import android.annotation.TargetApi;
@@ -16,18 +17,18 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -36,7 +37,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -52,20 +52,39 @@ public class MainActivity extends AppCompatActivity
     private Mat matInput;
     private Mat matResult;
 
-    private CameraBridgeViewBase mOpenCvCameraView;
+    private Mat matSepia;
+    private Mat matDraw;
+    private Mat matInvert;
+    private Mat matGray;
 
+    ImageView ivOriginal;
+    ImageView ivSepia;
+    ImageView ivSketch;
+    ImageView ivInvert;
+    ImageView ivGray;
+    private CameraBridgeViewBase mOpenCvCameraView;
+    ImageView imageeCameraButton;
     Handler handler;
+    Matrix matrix2;
+
+    private int filterChoice;
+
+
     public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
+
     public native void ConvertInvertFilter(long matAddrInput, long matAddrResult);
+
     public native void ConvertSepiaFilter(long matAddrInput, long matAddrResult);
 
     public native void ConvertBoxFilter(long matAddrInput, long matAddrResult);
+
     public native void ConvertMorphologyFilter(long matAddrInput, long matAddrResult);
+
     public native void ConvertMorphologyExFilter(long matAddrInput, long matAddrResult);
 
 
-
     public native void ConvertDrawFilter(long matAddrInput, long matAddrResult);
+
     public native void ConvertMyFilter(long matAddrInput, long matAddrResult);
 
 
@@ -105,7 +124,7 @@ public class MainActivity extends AppCompatActivity
         OutputStream outputStream = null;
 
         try {
-            Log.d( TAG, "copyFile :: 다음 경로로 파일복사 "+ pathDir);
+            Log.d(TAG, "copyFile :: 다음 경로로 파일복사 " + pathDir);
             inputStream = assetManager.open(filename);
             outputStream = new FileOutputStream(pathDir);
 
@@ -120,23 +139,23 @@ public class MainActivity extends AppCompatActivity
             outputStream.close();
             outputStream = null;
         } catch (Exception e) {
-            Log.d(TAG, "copyFile :: 파일 복사 중 예외 발생 "+e.toString() );
+            Log.d(TAG, "copyFile :: 파일 복사 중 예외 발생 " + e.toString());
         }
 
     }
 
 
     //분류파일 가져오기
-    private void read_cascade_file(){
+    private void read_cascade_file() {
         copyFile("haarcascade_frontalface_alt.xml");
         copyFile("haarcascade_eye_tree_eyeglasses.xml");
 
         Log.d(TAG, "read_cascade_file:");
 
-        cascadeClassifier_face = loadCascade( "haarcascade_frontalface_alt.xml");
+        cascadeClassifier_face = loadCascade("haarcascade_frontalface_alt.xml");
         Log.d(TAG, "read_cascade_file:");
 
-        cascadeClassifier_eye = loadCascade( "haarcascade_eye_tree_eyeglasses.xml");
+        cascadeClassifier_eye = loadCascade("haarcascade_eye_tree_eyeglasses.xml");
     }
 
 
@@ -172,25 +191,89 @@ public class MainActivity extends AppCompatActivity
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.setCameraIndex(0); // front-camera(1),  back-camera(0)
+        ivOriginal =  findViewById(R.id.ivOriginal);
 
-        handler = new Handler(){
+        ivSepia =  findViewById(R.id.ivSepia);
+        ivSketch =  findViewById(R.id.ivSketch);
+        ivInvert =  findViewById(R.id.ivInvert);
+        ivGray =  findViewById(R.id.ivGray);
 
-            public void handleMessage(Message msg){
+
+        matrix2 = new Matrix();
+
+        matrix2.postRotate(90);
+        handler = new Handler() {
+
+            public void handleMessage(Message msg) {
+
+
+//                Bitmap bitmap = Bitmap.createBitmap(mCacheBitmap, 0, 0, mCacheBitmap.getWidth(), mCacheBitmap.getHeight(), matrix, true);
+
+                // 원본
+                Bitmap bmOriginal = Bitmap.createBitmap(matInput.cols(), matInput.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(matInput, bmOriginal);
+                Bitmap rotatedbmOriginal = Bitmap.createBitmap(bmOriginal, 0, 0, bmOriginal.getWidth(), bmOriginal.getHeight(), matrix2, true);
+                ivOriginal.setImageBitmap(rotatedbmOriginal);
+
+
+
 
                 // convert to bitmap:
-                Bitmap bm = Bitmap.createBitmap(matResult.cols(), matResult.rows(), Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(matResult, bm);
-                ImageView iv = (ImageView) findViewById(R.id.imageViewTest);
+                Bitmap bmSepia = Bitmap.createBitmap(matSepia.cols(), matSepia.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(matSepia, bmSepia);
+                Bitmap rotatedbmSepia = Bitmap.createBitmap(bmSepia, 0, 0, bmSepia.getWidth(), bmSepia.getHeight(), matrix2, true);
+                ivSepia.setImageBitmap(rotatedbmSepia);
 
-                iv.setImageBitmap(bm);
+
+                Bitmap bmDraw = Bitmap.createBitmap(matDraw.cols(), matDraw.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(matDraw, bmDraw);
+                Bitmap rotatedbmDraw = Bitmap.createBitmap(bmDraw, 0, 0, bmDraw.getWidth(), bmDraw.getHeight(), matrix2, true);
+                ivSketch.setImageBitmap(rotatedbmDraw);
+
+                Bitmap bmInvert = Bitmap.createBitmap(matInvert.cols(), matInvert.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(matInvert, bmInvert);
+                Bitmap rotatedbmInvert = Bitmap.createBitmap(bmInvert, 0, 0, bmInvert.getWidth(), bmInvert.getHeight(), matrix2, true);
+                ivInvert.setImageBitmap(rotatedbmInvert);
+
+                Bitmap bmGray = Bitmap.createBitmap(matGray.cols(), matGray.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(matGray, bmGray);
+                Bitmap rotatedBitmap = Bitmap.createBitmap(bmGray, 0, 0, bmGray.getWidth(), bmGray.getHeight(), matrix2, true);
+                ivGray.setImageBitmap(rotatedBitmap);
+
 
             }
 
         };
 
 
-        Button button = (Button)findViewById(R.id.button);
-        button.setOnClickListener(new View.OnClickListener() {
+        ivOriginal.setOnClickListener(v ->{
+            Toast.makeText(getApplicationContext()  , "원본", Toast.LENGTH_LONG).show();
+            filterChoice = 0;
+        });
+
+
+        ivSepia.setOnClickListener(v ->{
+            Toast.makeText(getApplicationContext()  , "세피아", Toast.LENGTH_LONG).show();
+            filterChoice = 1;
+        });
+
+        ivSketch.setOnClickListener(v ->{
+            Toast.makeText(getApplicationContext()  , "스케치", Toast.LENGTH_LONG).show();
+            filterChoice = 2;
+        });
+        ivInvert.setOnClickListener(v ->{
+            Toast.makeText(getApplicationContext()  , "반전", Toast.LENGTH_LONG).show();
+            filterChoice = 3;
+        });
+
+        ivGray.setOnClickListener(v ->{
+            Toast.makeText(getApplicationContext()  , "그레이", Toast.LENGTH_LONG).show();
+            filterChoice = 4;
+        });
+
+
+        imageeCameraButton = findViewById(R.id.imageCameraButton);
+        imageeCameraButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
                 try {
@@ -203,12 +286,21 @@ public class MainActivity extends AppCompatActivity
                     String filename = file.toString();
 
                     Imgproc.cvtColor(matResult, matResult, Imgproc.COLOR_BGR2RGBA);
-                    boolean ret  = Imgcodecs.imwrite( filename, matResult);
-                    if ( ret ) Log.d(TAG, "SUCESS");
+
+                    //matResult 의 가로세로 바꾸어넣음..(원래 rows 다음에 colos 가 옴)
+                    Mat saveMat = new Mat(matResult.cols(), matResult.rows(), matResult.type());
+
+                    Bitmap bmDraw = Bitmap.createBitmap(matResult.cols(), matResult.rows(), Bitmap.Config.ARGB_8888);
+                    Utils.matToBitmap(matResult, bmDraw);
+                    Bitmap rotatedbmDraw = Bitmap.createBitmap(bmDraw, 0, 0, bmDraw.getWidth(), bmDraw.getHeight(), matrix2, true);
+                    Utils.bitmapToMat(rotatedbmDraw, saveMat);
+
+                    boolean ret = Imgcodecs.imwrite(filename, saveMat);
+                    if (ret) Log.d(TAG, "SUCESS");
                     else Log.d(TAG, "FAIL");
 
 
-                    Intent mediaScanIntent = new Intent( Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                     mediaScanIntent.setData(Uri.fromFile(file));
                     sendBroadcast(mediaScanIntent);
                 } catch (InterruptedException e) {
@@ -218,6 +310,20 @@ public class MainActivity extends AppCompatActivity
 
                 releaseWriteLock();
 
+            }
+        });
+
+        imageeCameraButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    imageeCameraButton.setImageDrawable(getResources().getDrawable(R.drawable.circle_click));
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    imageeCameraButton.setImageDrawable(getResources().getDrawable(R.drawable.circle));
+
+                }
+
+                return false;
             }
         });
 
@@ -270,35 +376,83 @@ public class MainActivity extends AppCompatActivity
 
         try {
             getWriteLock();
-        matInput = inputFrame.rgba();
-
-        if (matResult == null)
-            matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
-
-/*        //1. 그레이 필터
-        ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());*/
+            matInput = inputFrame.rgba();
 
 
-        //2. 얼굴인식 필터
+            if (matResult == null)
+                matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
+
+
+            matSepia = matResult.clone();
+            matDraw = matResult.clone();
+            matInvert = matResult.clone();
+            matGray = matResult.clone();
+
+
+            //1. sepia 필터
+            ConvertSepiaFilter(matInput.getNativeObjAddr(), matSepia.getNativeObjAddr());
+
+
+            //2. 연필로 그린거 같은 필터(draw Filter/Sketch Filter => 쓰레쉬 홀드)
+            ConvertDrawFilter(matInput.getNativeObjAddr(), matDraw.getNativeObjAddr());
+
+            //3. 반전필터
+            ConvertInvertFilter(matInput.getNativeObjAddr(), matInvert.getNativeObjAddr());
+
+            //4. 그레이 필터
+            ConvertRGBtoGray(matInput.getNativeObjAddr(), matGray.getNativeObjAddr());
+
+
+            switch (filterChoice) {
+
+                case 1:
+                    //1. sepia 필터
+                    ConvertSepiaFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+                    Log.w(TAG, "ConvertSepiaFilter: " +filterChoice);
+                    break;
+
+                case 2:
+                    //2. 연필로 그린거 같은 필터(draw Filter/Sketch Filter => 쓰레쉬 홀드)
+                    ConvertDrawFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+                    Log.w(TAG, "ConvertDrawFilter: " +filterChoice);
+                    break;
+
+                case 3:
+                    //3. 반전필터
+                    ConvertInvertFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+                    Log.w(TAG, "ConvertInvertFilter: " +filterChoice);
+                    break;
+
+                case 4:
+                    //4. 그레이 필터
+                    ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+                    Log.w(TAG, "ConvertRGBtoGray: " +filterChoice);
+                    break;
+                case 0:
+
+                default:
+                    matResult =matInput.clone();
+                    break;
+
+
+
+
+            }
+            Log.w(TAG, "onCameraFrame: " +filterChoice);
+
+
+            //2. 얼굴인식 필터
 /*        Core.flip(matInput, matInput, 1);
 
         detect(cascadeClassifier_face,cascadeClassifier_eye, matInput.getNativeObjAddr(),
                 matResult.getNativeObjAddr());*/
 
-        //3. 연필로 그린거 같은 필터(draw Filter => 쓰레쉬 홀드)
-//            ConvertDrawFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
 
-        //4. 뭉개지는 필터?
+            //4. 뭉개지는 필터?
 //            ConvertMorphologyFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
 
-        //5. 뭉개지는 필터 ex?
+            //5. 뭉개지는 필터 ex?
 //            ConvertMorphologyExFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
-
-/*            //6. 반전필터
-            ConvertInvertFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());*/
-
-            //7. sepia 필터
-            ConvertSepiaFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
 
 /*           //8. 박스 필터
             ConvertBoxFilter(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());*/
@@ -306,20 +460,11 @@ public class MainActivity extends AppCompatActivity
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
         releaseWriteLock();
 
-
-
         // find the imageview and draw it!
-
-
-
         Message msg = handler.obtainMessage();
-
         handler.sendMessage(msg);
-
-
 
 
         return matResult;
@@ -329,9 +474,8 @@ public class MainActivity extends AppCompatActivity
     protected List<? extends CameraBridgeViewBase> getCameraViewList() {
 //        return Collections.singletonList(mOpenCvCameraView);
         List<? extends CameraBridgeViewBase> cameraList = asList(mOpenCvCameraView);
-            return cameraList;
+        return cameraList;
     }
-
 
 
     //여기서부턴 퍼미션 관련 메소드
@@ -350,10 +494,6 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
-
-
-
-
 
 
     @Override
