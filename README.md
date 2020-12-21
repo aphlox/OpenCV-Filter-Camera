@@ -1,35 +1,31 @@
 # OpenCV-Filter-Camera
 
 
-[![Watch the video](https://user-images.githubusercontent.com/44167177/102751834-e2e41880-43ab-11eb-987a-6e485bc76cbd.png)](https://www.youtube.com/watch?v=O61vSJDqvxE&ab_channel=june)
+[![Watch the video](https://user-images.githubusercontent.com/44167177/102754161-e4174480-43af-11eb-9512-53a86546c9f6.png)](https://www.youtube.com/watch?v=e__pCTld3hw&ab_channel=june)
 
 * 누르면 youtube 영상으로 이동합니다
 
 # 프로젝트 기간
-> 2019/9/24 ~ 10/29
+> 2019/10/26 ~ 10/29
 
 # 사용 언어
-> JAVA
+> Java, C++
 
 # 설명
-> 식사와 대화를 중심으로 사람들 간의 만남을 주선해주는 어플입니다. 
+> OpenCV를 통해서 RGB채널 변환이나 threshold 을 이용한 필터(세피아, 흑백, 스케치(threshold), 반전, 그레이)를 적용하여 사진을 찍을 수 있는 어플입니다. 
+
 
 # 주요 기능
-## 네이버 지도 Api와 크롤링을 통해 지도에서 맛집 검색 및 순위별 추천 기능 
-![image](https://user-images.githubusercontent.com/44167177/102752577-1c695380-43ad-11eb-9399-1926ea0d4440.png)
+## 아래의 필터바를 통해 필터가 적용되는 모습 미리보기
+![image](https://user-images.githubusercontent.com/44167177/102754258-0610c700-43b0-11eb-97a8-af854a34a9df.png)
 
-## Firebase Realtime DB로 다른 핸드폰을 가진 사용자들도 실제 매치에 참석 가능
-![image](https://user-images.githubusercontent.com/44167177/102752042-48380980-43ac-11eb-981f-c2ade1a91435.png)
 
-# 주요 기능이외의 기능들
--이메일 인증 기능
-(Gmail Sender 라이브러리)
+## OpenCV를 활용하여 카메라 이미지에 필터 적용
+![image](https://user-images.githubusercontent.com/44167177/102754161-e4174480-43af-11eb-9512-53a86546c9f6.png)
 
--관리자 어플에서 프로필 승인 기능
-(Service, Broadcast Receiver 이용)
+## 필터 적용한 사진 갤러리에 저장
+![image](https://user-images.githubusercontent.com/44167177/102754310-217bd200-43b0-11eb-8222-c81604192891.png)
 
--타임라인 기능
-(추가되면 자동 정렬되어 배치)
 
 
 
